@@ -15,7 +15,7 @@
 #define RW_PIN   DIO_u8PIN1
 
 #define EN_PORT  DIO_u8PORTC
-#define EN_PIN   DIO_u8PIN3
+#define EN_PIN   DIO_u8PIN2
 
 /* data pins */
 #define D7_PORT  DIO_u8PORTD

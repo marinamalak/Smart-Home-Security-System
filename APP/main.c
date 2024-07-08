@@ -28,12 +28,25 @@
 int main(void)
 {
 
+
 	Smart_Home_enuInit();
 
 	while(1)
 	{
 
-		Login();
+		//Login();
+		if(Login()==ES_OK)
+		{
+			LCD_enuClearLcd();
+			LCD_enuDisplayString("status=");
+			_delay_ms(100000);
+			break;
+
+		}
+		else
+		{
+			continue;
+		}
 
 	}
 

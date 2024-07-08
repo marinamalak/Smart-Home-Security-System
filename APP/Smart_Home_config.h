@@ -8,7 +8,9 @@
 #ifndef APP_SMART_HOME_CONFIG_H_
 #define APP_SMART_HOME_CONFIG_H_
 
-u32 pass=1234;
+
+
+#define PASS      1234ul
 
 
 #endif /* APP_SMART_HOME_CONFIG_H_ */

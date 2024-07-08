@@ -37,10 +37,16 @@ int main(void)
 		//Login();
 		if(Login()==ES_OK)
 		{
-			LCD_enuClearLcd();
-			LCD_enuDisplayString("status=");
-			_delay_ms(100000);
-			break;
+				LCD_enuClearLcd();
+				LCD_enuDisplayString("status=");
+			while(1)
+			{
+				CHECK_temp();
+			}
+
+
+			//_delay_ms(100000);
+			//break;
 
 		}
 		else

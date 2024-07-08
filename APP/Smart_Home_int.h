@@ -12,7 +12,7 @@ ES_t Smart_Home_enuInit(void);
 
 ES_t Login(void);
 
-
+ES_t CHECK_temp(void);
 
 
 #endif /* APP_SMART_HOME_INT_H_ */

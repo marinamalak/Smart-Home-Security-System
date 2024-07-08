@@ -18,8 +18,8 @@
 #include "../HAL/LCD/LCD_int.h"
 #include "../HAL/LCD/LCD_config.h"
 
-#include "../MCAL/EINT/INT_config.h"
-#include "../MCAL/EINT/INT_int.h"
+//#include "../MCAL/EINT/INT_config.h"
+//#include "../MCAL/EINT/INT_int.h"
 
 #include "../MCAL/ADC/ADC_int.h"
 
@@ -28,23 +28,26 @@
 
 #include <util/delay.h>
 
+#include "Smart_Home_priv.h"
 #include "Smart_Home_config.h"
 
 
-extern EINT_t EINT_tstrEINTcofig[3];
+//extern EINT_t EINT_tstrEINTcofig[3];
 
 extern TR_t LM35_AstrLM35Config[2];
 
 
-u8 Read_temp_Flag =0;
-u32 Password=PASS;
+//u8 Read_temp_Flag =0 ;
+u8 Alarm_State=0;
+u32 Password = PASS;
 f32 Temp_value ,IntermidiateValue = 0;;
 
 
 static ES_t OPEN_Door(void);
-static void Read_Temp(void*p);
-static ES_t Fire_Alarm_ON(void);
-static ES_t Fire_Alarm_OFF(void);
+//static void Read_Temp(void*p);
+static ES_t LED_Indicators(void);
+static ES_t Alarm_ON(void);
+static ES_t Alarm_OFF(void);
 
 
 ES_t Smart_Home_enuInit(void)
@@ -56,7 +59,7 @@ ES_t Smart_Home_enuInit(void)
 	Local_enuErrorState = LCD_enuInit();
 
 	//Interrupt PIN
-	DIO_enuSetPinDirection(DIO_u8PORTD,DIO_u8PIN2,DIO_u8INPUT);
+	//DIO_enuSetPinDirection(DIO_u8PORTD,DIO_u8PIN2,DIO_u8INPUT);
 
 /*	Local_enuErrorState = EINT_enuInit(EINT_tstrEINTcofig);
 	Local_enuErrorState = EINT_enuSelectSenceLevel(0,FALLING_EDGE);
@@ -72,14 +75,24 @@ ES_t Smart_Home_enuInit(void)
 
 	//Door >> output
 	 Local_enuErrorState = DIO_enuSetPinDirection(DIO_u8PORTA,DIO_u8PIN1,DIO_u8OUTPUT);
+	 Local_enuErrorState = DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN1,DIO_u8LOW);
 
 	 //Fire Alarm >> output
 	 Local_enuErrorState = DIO_enuSetPinDirection(DIO_u8PORTA,DIO_u8PIN3,DIO_u8OUTPUT);
-
+	 Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN3,DIO_u8LOW);
 
 	 //Buzzer >> output
 	 Local_enuErrorState = DIO_enuSetPinDirection(DIO_u8PORTD,DIO_u8PIN4,DIO_u8OUTPUT);
+	 Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTD,DIO_u8PIN4,DIO_u8LOW);
 
+	 //GAS sensor PIN
+	 DIO_enuSetPinDirection(DIO_u8PORTD,DIO_u8PIN3,DIO_u8INPUT);
+
+	 /*
+	 //GAS Detection PIN
+	 Local_enuErrorState = DIO_enuSetPinDirection(DIO_u8PORTA,DIO_u8PIN4,DIO_u8OUTPUT);
+	 Local_enuErrorState = DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN4,DIO_u8LOW);
+	 */
 
 
 
@@ -112,7 +125,7 @@ ES_t Login(void)
 			  LCD_enuDisplayChar('*');
 			 // LCD_enuDisplayChar(key);
 		  }
-		  if(key==KPD_NO_PRESSED_KEY)
+		  if(key == KPD_NO_PRESSED_KEY)
 		  {
 			  i--;
 		  }
@@ -123,7 +136,7 @@ ES_t Login(void)
 		//open door
 		Local_enuErrorState=OPEN_Door();
 		value =0;
-		//Local_enuErrorState=ES_OK;
+		Local_enuErrorState=ES_OK;
 	}else
 	{
 		LCD_enuClearLcd();
@@ -160,6 +173,7 @@ ES_t Login(void)
 	if(IntermidiateValue != Temp_value)
 	{
 		LCD_enuClearLcd();
+		LCD_enuDisplayString("T=");
 		Local_enuErrorState =LCD_enuDisplayNum(Temp_value);
 		IntermidiateValue = Temp_value;
 	}
@@ -168,13 +182,17 @@ ES_t Login(void)
 
 	if(Local_u8Value >=60 )
 	{
+		Alarm_State = FIRE;
+		LED_Indicators();
 		// Fire Alarm
-		Local_enuErrorState = Fire_Alarm_ON();
+		Local_enuErrorState = Alarm_ON();
 
 	}
 	else
 	{
-		Local_enuErrorState = Fire_Alarm_OFF();
+		Alarm_State = 0;
+		LED_Indicators();
+		Local_enuErrorState = Alarm_OFF();
 	}
 
 
@@ -182,17 +200,67 @@ ES_t Login(void)
 }
 
 
+ES_t CHECK_gas(void)
+{
+	ES_t Local_enuErrorState =ES_NOK;
+
+	u8 GAS_detect=0;
+
+	DIO_enuGetPinValue(DIO_u8PORTD,DIO_u8PIN3,&GAS_detect);
+
+	if(GAS_detect==1)
+	{
+		LCD_enuGoToPosition(1,8);
+		LCD_enuDisplayString("LEAKAGE");
+		Alarm_State = GAS;
+		LED_Indicators();
+		Local_enuErrorState = Alarm_ON();
+	}
+	else
+	{
+		LCD_enuGoToPosition(1,8);
+		LCD_enuDisplayString("NORMAL ");
+		Alarm_State = 0;
+		LED_Indicators();
+		Local_enuErrorState = Alarm_OFF();
+	}
+
+	return Local_enuErrorState;
+}
+
+static ES_t LED_Indicators(void)
+{
+	ES_t Local_enuErrorState =ES_NOK;
+
+	switch(Alarm_State)
+	{
+	case FIRE:
+		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN3,DIO_u8HIGH);
+		break;
+	case GAS:
+		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN4,DIO_u8HIGH);
+		break;
+	case 0:
+		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN3,DIO_u8LOW);
+		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN4,DIO_u8LOW);
+		break;
+
+
+	}
+
+	return Local_enuErrorState;
+}
 
 
 
-
+/*
 static void Read_Temp(void*p)
 {
 	LCD_enuClearLcd();
 	LM35_enuGetTemp((f32 *)p);
 	Read_temp_Flag = 1;
 	//flag=1;
-}
+}*/
 
 
 
@@ -208,11 +276,20 @@ static ES_t OPEN_Door(void)
 	return Local_enuErrorState;
 }
 
-static ES_t Fire_Alarm_ON(void)
+static ES_t Alarm_ON(void)
 {
 	ES_t Local_enuErrorState =ES_NOK;
 
-	Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN3,DIO_u8HIGH);
+/*	switch(Alarm_State)
+	{
+	case FIRE:
+		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN3,DIO_u8HIGH);
+		break;
+	case GAS:
+		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN4,DIO_u8HIGH);
+		break;
+
+	}*/
 	Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTD,DIO_u8PIN4,DIO_u8HIGH);
 
 
@@ -221,11 +298,22 @@ static ES_t Fire_Alarm_ON(void)
 }
 
 
-static ES_t Fire_Alarm_OFF(void)
+static ES_t Alarm_OFF(void)
 {
 	ES_t Local_enuErrorState =ES_NOK;
 
-	Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN3,DIO_u8LOW);
+/*	switch(Alarm_State)
+	{
+	case FIRE:
+		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN3,DIO_u8LOW);
+		break;
+	case GAS:
+		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN4,DIO_u8LOW);
+		break;
+
+	}*/
+
+
 	Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTD,DIO_u8PIN4,DIO_u8LOW);
 
 

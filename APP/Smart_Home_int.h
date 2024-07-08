@@ -14,5 +14,9 @@ ES_t Login(void);
 
 ES_t CHECK_temp(void);
 
+ES_t CHECK_gas(void);
+
+
+
 
 #endif /* APP_SMART_HOME_INT_H_ */

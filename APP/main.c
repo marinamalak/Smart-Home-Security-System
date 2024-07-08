@@ -38,10 +38,13 @@ int main(void)
 		if(Login()==ES_OK)
 		{
 				LCD_enuClearLcd();
-				LCD_enuDisplayString("status=");
+				LCD_enuDisplayString("Status");
+				_delay_ms(1000);
+
 			while(1)
 			{
 				CHECK_temp();
+				CHECK_gas();
 			}
 
 
@@ -51,6 +54,7 @@ int main(void)
 		}
 		else
 		{
+			LCD_enuClearLcd();
 			continue;
 		}
 

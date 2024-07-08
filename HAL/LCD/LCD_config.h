@@ -8,11 +8,11 @@
 #define LCD_MODE EIGHT_BIT
 
 /* control pins */
-#define RS_PORT  DIO_u8PORTC
-#define RS_PIN   DIO_u8PIN0
+#define RS_PORT  DIO_u8PORTA
+#define RS_PIN   DIO_u8PIN6
 
-#define RW_PORT  DIO_u8PORTC
-#define RW_PIN   DIO_u8PIN1
+#define RW_PORT  DIO_u8PORTA
+#define RW_PIN   DIO_u8PIN7
 
 #define EN_PORT  DIO_u8PORTC
 #define EN_PIN   DIO_u8PIN2

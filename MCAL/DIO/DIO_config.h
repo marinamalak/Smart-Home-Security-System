@@ -39,7 +39,7 @@
 #define PD_PIN1_DIR  OUTPUT
 #define PD_PIN2_DIR  OUTPUT
 #define PD_PIN3_DIR  OUTPUT
-#define PD_PIN4_DIR  INPUT
+#define PD_PIN4_DIR  OUTPUT
 #define PD_PIN5_DIR  INPUT
 #define PD_PIN6_DIR  INPUT
 #define PD_PIN7_DIR  INPUT
@@ -73,9 +73,9 @@
 
 #define PD_PIN0_VAL  HIGH
 #define PD_PIN1_VAL  HIGH
-#define PD_PIN2_VAL  HIGH
+#define PD_PIN2_VAL  LOW
 #define PD_PIN3_VAL  HIGH
-#define PD_PIN4_VAL  HIGH
+#define PD_PIN4_VAL  LOW
 #define PD_PIN5_VAL  HIGH
 #define PD_PIN6_VAL  HIGH
 #define PD_PIN7_VAL  HIGH

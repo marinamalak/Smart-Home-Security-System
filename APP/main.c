@@ -39,13 +39,14 @@ int main(void)
 		{
 				LCD_enuClearLcd();
 				LCD_enuDisplayString("Status");
-				_delay_ms(1000);
+				_delay_ms(250);
 
 			while(1)
 			{
 				CHECK_temp();
 				CHECK_gas();
-			}
+				CHECK_windowAttack();
+				CHECK_packageThief();			}
 
 
 			//_delay_ms(100000);

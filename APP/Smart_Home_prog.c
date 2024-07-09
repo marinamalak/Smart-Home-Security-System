@@ -40,7 +40,7 @@ extern TR_t LM35_AstrLM35Config[2];
 //u8 Read_temp_Flag =0 ;
 u8 Alarm_State=0;
 u32 Password = PASS;
-f32 Temp_value ,IntermidiateValue = 0;;
+f32 Temp_value ,IntermidiateValue = 0;
 
 
 static ES_t OPEN_Door(void);
@@ -110,7 +110,6 @@ ES_t Login(void)
 	u8 key,i=0;
 	u16 value=0;
 
-
 	//NOTE: keypad return char value
 
 	LCD_enuClearLcd();
@@ -123,7 +122,6 @@ ES_t Login(void)
 		  {
 			  value= value*10+(key-'0');
 			  LCD_enuDisplayChar('*');
-			 // LCD_enuDisplayChar(key);
 		  }
 		  if(key == KPD_NO_PRESSED_KEY)
 		  {
@@ -168,8 +166,6 @@ ES_t Login(void)
 */
 
 
-
-
 	if(IntermidiateValue != Temp_value)
 	{
 		LCD_enuClearLcd();
@@ -185,14 +181,14 @@ ES_t Login(void)
 		Alarm_State = FIRE;
 		LED_Indicators();
 		// Fire Alarm
-		Local_enuErrorState = Alarm_ON();
+		//Local_enuErrorState = Alarm_ON();
 
 	}
 	else
 	{
-		Alarm_State = 0;
+		Alarm_State = NORMAL;
 		LED_Indicators();
-		Local_enuErrorState = Alarm_OFF();
+		//Local_enuErrorState = Alarm_OFF();
 	}
 
 
@@ -214,14 +210,68 @@ ES_t CHECK_gas(void)
 		LCD_enuDisplayString("LEAKAGE");
 		Alarm_State = GAS;
 		LED_Indicators();
-		Local_enuErrorState = Alarm_ON();
+		//Local_enuErrorState = Alarm_ON();
 	}
 	else
 	{
 		LCD_enuGoToPosition(1,8);
-		LCD_enuDisplayString("NORMAL ");
-		Alarm_State = 0;
+		LCD_enuDisplayString("NORMAL");
+		Alarm_State = NORMAL;
 		LED_Indicators();
+		//Local_enuErrorState = Alarm_OFF();
+	}
+
+	return Local_enuErrorState;
+}
+
+ES_t CHECK_windowAttack(void)
+{
+	ES_t Local_enuErrorState =ES_NOK;
+
+	u8 Sensors_state=0;
+
+	DIO_enuGetPinValue(DIO_u8PORTA,DIO_u8PIN0,&Sensors_state);
+
+	if(Sensors_state==1 )
+	{
+		LCD_enuGoToPosition(2,1);
+		LCD_enuDisplayString("ATTACK");
+		Alarm_State = ATTACK;
+		LED_Indicators();
+		//Local_enuErrorState = Alarm_ON();
+	}
+	else
+	{
+		LCD_enuGoToPosition(2,1);
+		LCD_enuDisplayString("NORMAL");
+		Alarm_State = NORMAL;
+		LED_Indicators();
+		//Local_enuErrorState = Alarm_OFF();
+	}
+
+	return Local_enuErrorState;
+}
+
+ES_t CHECK_packageThief(void)
+{
+	ES_t Local_enuErrorState =ES_NOK;
+
+	u8 Sensors_state=0;
+
+	DIO_enuGetPinValue(DIO_u8PORTA,DIO_u8PIN4,&Sensors_state);
+
+	if(Sensors_state==1 )
+	{
+		LCD_enuGoToPosition(2,8);
+		LCD_enuDisplayString("THIEF");
+		Alarm_State = THIEF;
+		Local_enuErrorState = Alarm_ON();
+	}
+	else
+	{
+		LCD_enuGoToPosition(2,8);
+		LCD_enuDisplayString("NORMAL");
+		Alarm_State = NORMAL;
 		Local_enuErrorState = Alarm_OFF();
 	}
 
@@ -238,14 +288,16 @@ static ES_t LED_Indicators(void)
 		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN3,DIO_u8HIGH);
 		break;
 	case GAS:
-		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN4,DIO_u8HIGH);
+		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN5,DIO_u8HIGH);
 		break;
-	case 0:
+	case ATTACK:
+		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTD,DIO_u8PIN4,DIO_u8HIGH);
+		break;
+	case NORMAL:
 		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN3,DIO_u8LOW);
-		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN4,DIO_u8LOW);
+		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN5,DIO_u8LOW);
+		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTD,DIO_u8PIN4,DIO_u8LOW);
 		break;
-
-
 	}
 
 	return Local_enuErrorState;
@@ -262,15 +314,12 @@ static void Read_Temp(void*p)
 	//flag=1;
 }*/
 
-
-
-
 static ES_t OPEN_Door(void)
 {
 	ES_t Local_enuErrorState =ES_NOK;
 
 	Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN1,DIO_u8HIGH);
-	_delay_ms(5000);
+	_delay_ms(3000);
 	Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN1,DIO_u8LOW);
 
 	return Local_enuErrorState;
@@ -280,19 +329,7 @@ static ES_t Alarm_ON(void)
 {
 	ES_t Local_enuErrorState =ES_NOK;
 
-/*	switch(Alarm_State)
-	{
-	case FIRE:
-		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN3,DIO_u8HIGH);
-		break;
-	case GAS:
-		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN4,DIO_u8HIGH);
-		break;
-
-	}*/
-	Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTD,DIO_u8PIN4,DIO_u8HIGH);
-
-
+	Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTD,DIO_u8PIN2,DIO_u8HIGH);
 
 	return Local_enuErrorState;
 }
@@ -302,22 +339,7 @@ static ES_t Alarm_OFF(void)
 {
 	ES_t Local_enuErrorState =ES_NOK;
 
-/*	switch(Alarm_State)
-	{
-	case FIRE:
-		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN3,DIO_u8LOW);
-		break;
-	case GAS:
-		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN4,DIO_u8LOW);
-		break;
-
-	}*/
-
-
-	Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTD,DIO_u8PIN4,DIO_u8LOW);
-
-
-
+	Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTD,DIO_u8PIN2,DIO_u8LOW);
 
 	return Local_enuErrorState;
 }

@@ -16,7 +16,8 @@ ES_t CHECK_temp(void);
 
 ES_t CHECK_gas(void);
 
+ES_t CHECK_windowAttack(void);
 
-
+ES_t CHECK_packageThief(void);
 
 #endif /* APP_SMART_HOME_INT_H_ */

@@ -81,9 +81,13 @@ ES_t Smart_Home_enuInit(void)
 	 Local_enuErrorState = DIO_enuSetPinDirection(DIO_u8PORTA,DIO_u8PIN3,DIO_u8OUTPUT);
 	 Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN3,DIO_u8LOW);
 
-	 //Buzzer >> output
+	 // Window >> output
 	 Local_enuErrorState = DIO_enuSetPinDirection(DIO_u8PORTD,DIO_u8PIN4,DIO_u8OUTPUT);
 	 Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTD,DIO_u8PIN4,DIO_u8LOW);
+
+	 //Buzzer >> output
+	 Local_enuErrorState = DIO_enuSetPinDirection(DIO_u8PORTD,DIO_u8PIN2,DIO_u8OUTPUT);
+	 Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTD,DIO_u8PIN2,DIO_u8LOW);
 
 	 //GAS sensor PIN
 	 DIO_enuSetPinDirection(DIO_u8PORTD,DIO_u8PIN3,DIO_u8INPUT);
@@ -93,6 +97,13 @@ ES_t Smart_Home_enuInit(void)
 	 Local_enuErrorState = DIO_enuSetPinDirection(DIO_u8PORTA,DIO_u8PIN4,DIO_u8OUTPUT);
 	 Local_enuErrorState = DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN4,DIO_u8LOW);
 	 */
+
+	 // Package PIN
+	 DIO_enuSetPinDirection(DIO_u8PORTA,DIO_u8PIN4,DIO_u8INPUT);
+
+
+	 // window PIN
+	 DIO_enuSetPinDirection(DIO_u8PORTA,DIO_u8PIN0,DIO_u8INPUT);
 
 
 
@@ -181,14 +192,14 @@ ES_t Login(void)
 		Alarm_State = FIRE;
 		LED_Indicators();
 		// Fire Alarm
-		//Local_enuErrorState = Alarm_ON();
+		Local_enuErrorState = Alarm_ON();
 
 	}
 	else
 	{
 		Alarm_State = NORMAL;
 		LED_Indicators();
-		//Local_enuErrorState = Alarm_OFF();
+		Local_enuErrorState = Alarm_OFF();
 	}
 
 
@@ -210,15 +221,15 @@ ES_t CHECK_gas(void)
 		LCD_enuDisplayString("LEAKAGE");
 		Alarm_State = GAS;
 		LED_Indicators();
-		//Local_enuErrorState = Alarm_ON();
+		Local_enuErrorState = Alarm_ON();
 	}
 	else
 	{
 		LCD_enuGoToPosition(1,8);
-		LCD_enuDisplayString("NORMAL");
+		LCD_enuDisplayString("NORMAL ");
 		Alarm_State = NORMAL;
 		LED_Indicators();
-		//Local_enuErrorState = Alarm_OFF();
+		Local_enuErrorState = Alarm_OFF();
 	}
 
 	return Local_enuErrorState;
@@ -238,7 +249,7 @@ ES_t CHECK_windowAttack(void)
 		LCD_enuDisplayString("ATTACK");
 		Alarm_State = ATTACK;
 		LED_Indicators();
-		//Local_enuErrorState = Alarm_ON();
+		Local_enuErrorState = Alarm_ON();
 	}
 	else
 	{
@@ -246,7 +257,7 @@ ES_t CHECK_windowAttack(void)
 		LCD_enuDisplayString("NORMAL");
 		Alarm_State = NORMAL;
 		LED_Indicators();
-		//Local_enuErrorState = Alarm_OFF();
+		Local_enuErrorState = Alarm_OFF();
 	}
 
 	return Local_enuErrorState;
@@ -263,7 +274,7 @@ ES_t CHECK_packageThief(void)
 	if(Sensors_state==1 )
 	{
 		LCD_enuGoToPosition(2,8);
-		LCD_enuDisplayString("THIEF");
+		LCD_enuDisplayString("THIEF ");
 		Alarm_State = THIEF;
 		Local_enuErrorState = Alarm_ON();
 	}

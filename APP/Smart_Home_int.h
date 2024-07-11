@@ -20,4 +20,6 @@ ES_t CHECK_windowAttack(void);
 
 ES_t CHECK_packageThief(void);
 
+ES_t UART(void);
+
 #endif /* APP_SMART_HOME_INT_H_ */

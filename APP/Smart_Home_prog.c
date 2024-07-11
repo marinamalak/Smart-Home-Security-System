@@ -18,10 +18,9 @@
 #include "../HAL/LCD/LCD_int.h"
 #include "../HAL/LCD/LCD_config.h"
 
-//#include "../MCAL/EINT/INT_config.h"
-//#include "../MCAL/EINT/INT_int.h"
-
 #include "../MCAL/ADC/ADC_int.h"
+
+#include "../MCAL/Uart/Uart_int.h"
 
 #include "../HAL/LM35/LM35_config.h"
 #include "../HAL/LM35/LM35_int.h"
@@ -48,7 +47,7 @@ static ES_t OPEN_Door(void);
 static ES_t LED_Indicators(void);
 static ES_t Alarm_ON(void);
 static ES_t Alarm_OFF(void);
-
+static ES_t Compare(u8* str1 ,u8* str2);
 
 ES_t Smart_Home_enuInit(void)
 {
@@ -57,6 +56,7 @@ ES_t Smart_Home_enuInit(void)
 	Local_enuErrorState = DIO_enuInit();
 	Local_enuErrorState = KEYPAD_enuInit();
 	Local_enuErrorState = LCD_enuInit();
+	Local_enuErrorState =Uart_enuInit();
 
 	//Interrupt PIN
 	//DIO_enuSetPinDirection(DIO_u8PORTD,DIO_u8PIN2,DIO_u8INPUT);
@@ -299,14 +299,14 @@ static ES_t LED_Indicators(void)
 		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN3,DIO_u8HIGH);
 		break;
 	case GAS:
-		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN5,DIO_u8HIGH);
+	//	Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN5,DIO_u8HIGH);
 		break;
 	case ATTACK:
 		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTD,DIO_u8PIN4,DIO_u8HIGH);
 		break;
 	case NORMAL:
 		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN3,DIO_u8LOW);
-		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN5,DIO_u8LOW);
+		//Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN5,DIO_u8LOW);
 		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTD,DIO_u8PIN4,DIO_u8LOW);
 		break;
 	}
@@ -355,8 +355,60 @@ static ES_t Alarm_OFF(void)
 	return Local_enuErrorState;
 }
 
+ES_t UART(void)
+{
+	ES_t Local_enuErrorState =ES_NOK;
 
+	u8 Data[20];
+	static u8 counter =1;
+	 Local_enuErrorState=DIO_enuSetPinDirection(DIO_u8PORTD,DIO_u8PIN0,DIO_u8INPUT);
+	 Local_enuErrorState=DIO_enuSetPinDirection(DIO_u8PORTD,DIO_u8PIN1,DIO_u8OUTPUT);
 
+	if(counter == 1)
+	{
+     Uart_enuSendString("welcome to your smart home \r\n");
+     counter++;
+	}
+		Uart_enuSendString("\rEnter your choice : ");
+		Uart_enuRecieveString(Data);
+		Uart_enuSendString(Data);
+
+		if(ES_OK == Compare(Data,"ledon"))
+		{
+			DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN5,DIO_u8HIGH);
+		}
+		else if (ES_OK == Compare(Data,"ledoff"))
+		{
+			DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN5,DIO_u8LOW);
+		}
+		else
+		{
+			Uart_enuSendString("\r Wrong choice \r");
+		}
+
+	return Local_enuErrorState;
+
+}
+
+ES_t Compare(u8* str1 ,u8* str2)
+{
+	ES_t Local_enuErrorState =ES_NOK;
+	u8 i=0;
+	for(;str1[i]!='\0' && str2[i]!='\0';i++)
+	{
+		if(str1[i] != str2[i])
+		{
+			break;
+		}
+	}
+	if(str1[i]==0 && str2[i]==0)
+	{
+		Local_enuErrorState=ES_OK;
+		return Local_enuErrorState ;
+	}
+	Local_enuErrorState=ES_OK;
+	return Local_enuErrorState ;
+}
 
 
 

@@ -30,19 +30,21 @@ int main(void)
 
 
 	Smart_Home_enuInit();
-
 	while(1)
 	{
 
 		//Login();
 		if(Login()==ES_OK)
 		{
+
 				LCD_enuClearLcd();
 				LCD_enuDisplayString("Status");
 				_delay_ms(250);
 
+
 			while(1)
 			{
+				UART();
 				CHECK_temp();
 				CHECK_gas();
 				CHECK_windowAttack();

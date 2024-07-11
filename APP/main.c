@@ -32,6 +32,7 @@ int main(void)
 	Smart_Home_enuInit();
 	while(1)
 	{
+		//UART();
 
 		//Login();
 		if(Login()==ES_OK)
@@ -44,11 +45,12 @@ int main(void)
 
 			while(1)
 			{
-				UART();
 				CHECK_temp();
 				CHECK_gas();
 				CHECK_windowAttack();
-				CHECK_packageThief();			}
+				CHECK_packageThief();
+				UART();
+			}
 
 
 			//_delay_ms(100000);

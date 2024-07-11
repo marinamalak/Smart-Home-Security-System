@@ -22,6 +22,8 @@
 
 #include "../MCAL/Uart/Uart_int.h"
 
+#include "../HAL/EEPROM/EEPROM_int.h"
+
 #include "../HAL/LM35/LM35_config.h"
 #include "../HAL/LM35/LM35_int.h"
 
@@ -41,6 +43,8 @@ u8 Alarm_State=0;
 u32 Password = PASS;
 f32 Temp_value ,IntermidiateValue = 0;
 
+ u16 EEPROM_Address=1;
+
 
 static ES_t OPEN_Door(void);
 //static void Read_Temp(void*p);
@@ -56,7 +60,14 @@ ES_t Smart_Home_enuInit(void)
 	Local_enuErrorState = DIO_enuInit();
 	Local_enuErrorState = KEYPAD_enuInit();
 	Local_enuErrorState = LCD_enuInit();
-	Local_enuErrorState =Uart_enuInit();
+	Local_enuErrorState = Uart_enuInit();
+	Local_enuErrorState = EEPROM_enuInit();
+
+
+	//UART PIN
+	Local_enuErrorState=DIO_enuSetPinDirection(DIO_u8PORTD,DIO_u8PIN0,DIO_u8INPUT);
+	Local_enuErrorState=DIO_enuSetPinDirection(DIO_u8PORTD,DIO_u8PIN1,DIO_u8OUTPUT);
+
 
 	//Interrupt PIN
 	//DIO_enuSetPinDirection(DIO_u8PORTD,DIO_u8PIN2,DIO_u8INPUT);
@@ -106,6 +117,10 @@ ES_t Smart_Home_enuInit(void)
 	 DIO_enuSetPinDirection(DIO_u8PORTA,DIO_u8PIN0,DIO_u8INPUT);
 
 
+	 // UART
+	 DIO_enuSetPinDirection(DIO_u8PORTA,DIO_u8PIN5,DIO_u8OUTPUT);
+
+
 
 
 	Local_enuErrorState = GIE_enuEnable();
@@ -144,6 +159,11 @@ ES_t Login(void)
 	{
 		//open door
 		Local_enuErrorState=OPEN_Door();
+
+		// EEPROM
+		Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,'L');
+		EEPROM_Address++;
+
 		value =0;
 		Local_enuErrorState=ES_OK;
 	}else
@@ -176,16 +196,23 @@ ES_t Login(void)
 	}
 */
 
+	u8 Local_u8Value = (u8) Temp_value;
 
 	if(IntermidiateValue != Temp_value)
 	{
 		LCD_enuClearLcd();
 		LCD_enuDisplayString("T=");
 		Local_enuErrorState =LCD_enuDisplayNum(Temp_value);
+
+		// EEPROM
+		Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,'F');
+		EEPROM_Address++;
+		//Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,'o');
+		//EEPROM_Address++;
+
 		IntermidiateValue = Temp_value;
 	}
 
-	u8 Local_u8Value = (u8) Temp_value;
 
 	if(Local_u8Value >=60 )
 	{
@@ -212,13 +239,24 @@ ES_t CHECK_gas(void)
 	ES_t Local_enuErrorState =ES_NOK;
 
 	u8 GAS_detect=0;
+	static u8 Last_state=0;
 
 	DIO_enuGetPinValue(DIO_u8PORTD,DIO_u8PIN3,&GAS_detect);
+
 
 	if(GAS_detect==1)
 	{
 		LCD_enuGoToPosition(1,8);
 		LCD_enuDisplayString("LEAKAGE");
+
+		// EEPROM
+		if(Last_state != GAS_detect)
+		{
+			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,'G');
+			EEPROM_Address++;
+			Last_state = GAS_detect;
+		}
+
 		Alarm_State = GAS;
 		LED_Indicators();
 		Local_enuErrorState = Alarm_ON();
@@ -240,6 +278,7 @@ ES_t CHECK_windowAttack(void)
 	ES_t Local_enuErrorState =ES_NOK;
 
 	u8 Sensors_state=0;
+	static u8 Last_state=0;
 
 	DIO_enuGetPinValue(DIO_u8PORTA,DIO_u8PIN0,&Sensors_state);
 
@@ -247,6 +286,15 @@ ES_t CHECK_windowAttack(void)
 	{
 		LCD_enuGoToPosition(2,1);
 		LCD_enuDisplayString("ATTACK");
+
+		// EEPROM
+		if(Last_state != Sensors_state)
+		{
+			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,'W');
+			EEPROM_Address++;
+			Last_state = Sensors_state;
+		}
+
 		Alarm_State = ATTACK;
 		LED_Indicators();
 		Local_enuErrorState = Alarm_ON();
@@ -268,6 +316,7 @@ ES_t CHECK_packageThief(void)
 	ES_t Local_enuErrorState =ES_NOK;
 
 	u8 Sensors_state=0;
+	static u8 Last_state=0;
 
 	DIO_enuGetPinValue(DIO_u8PORTA,DIO_u8PIN4,&Sensors_state);
 
@@ -275,6 +324,15 @@ ES_t CHECK_packageThief(void)
 	{
 		LCD_enuGoToPosition(2,8);
 		LCD_enuDisplayString("THIEF ");
+
+		// EEPROM
+		if(Last_state != Sensors_state)
+		{
+			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,'P');
+			EEPROM_Address++;
+			Last_state = Sensors_state;
+		}
+
 		Alarm_State = THIEF;
 		Local_enuErrorState = Alarm_ON();
 	}
@@ -361,15 +419,46 @@ ES_t UART(void)
 
 	u8 Data[20];
 	static u8 counter =1;
-	 Local_enuErrorState=DIO_enuSetPinDirection(DIO_u8PORTD,DIO_u8PIN0,DIO_u8INPUT);
-	 Local_enuErrorState=DIO_enuSetPinDirection(DIO_u8PORTD,DIO_u8PIN1,DIO_u8OUTPUT);
+	// Local_enuErrorState=DIO_enuSetPinDirection(DIO_u8PORTD,DIO_u8PIN0,DIO_u8INPUT);
+	 //Local_enuErrorState=DIO_enuSetPinDirection(DIO_u8PORTD,DIO_u8PIN1,DIO_u8OUTPUT);
 
 	if(counter == 1)
 	{
      Uart_enuSendString("welcome to your smart home \r\n");
+     Uart_enuSendString("EEPROM CONTENT \r\n");
      counter++;
 	}
-		Uart_enuSendString("\rEnter your choice : ");
+	else
+	{
+		//Uart_enuSendString("EEPROM Ubdates CONTENT \r\n");
+	}
+
+	static u16 Last_ubdate=0;
+
+	u8 Local_u8Data=0;
+
+	if(EEPROM_Address > Last_ubdate)
+	{
+		Uart_enuSendString("EEPROM Ubdates CONTENT \r\n");
+
+		for( u16 i=0;i<EEPROM_Address;i++)
+		{
+			if(i%2==0 && i!=0)
+			{
+				Uart_enuSendString("\r\n");
+			}
+			EEPROM_enuReadData(i,&Local_u8Data);
+			Uart_enuSendChar(Local_u8Data);
+		}
+		Last_ubdate=EEPROM_Address;
+
+	}
+
+
+
+
+
+		/*Uart_enuSendString("\rEnter your choice : ");
 		Uart_enuRecieveString(Data);
 		Uart_enuSendString(Data);
 
@@ -384,7 +473,7 @@ ES_t UART(void)
 		else
 		{
 			Uart_enuSendString("\r Wrong choice \r");
-		}
+		}*/
 
 	return Local_enuErrorState;
 
@@ -406,7 +495,7 @@ ES_t Compare(u8* str1 ,u8* str2)
 		Local_enuErrorState=ES_OK;
 		return Local_enuErrorState ;
 	}
-	Local_enuErrorState=ES_OK;
+	//Local_enuErrorState=ES_OK; >> this line who give error
 	return Local_enuErrorState ;
 }
 

@@ -25,6 +25,8 @@
 
 #include <util/delay.h>
 
+#define F_CPU 8000000UL
+
 int main(void)
 {
 
@@ -45,6 +47,7 @@ int main(void)
 
 			while(1)
 			{
+				//APP_enuStart();
 				CHECK_temp();
 				CHECK_gas();
 				CHECK_windowAttack();

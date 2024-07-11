@@ -10,6 +10,8 @@
 
 ES_t Smart_Home_enuInit(void);
 
+ES_t APP_enuStart();
+
 ES_t Login(void);
 
 ES_t CHECK_temp(void);

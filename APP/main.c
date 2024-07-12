@@ -40,6 +40,7 @@ int main(void)
 				LCD_enuClearLcd();
 				LCD_enuDisplayString("Status");
 				_delay_ms(150);
+				LCD_enuClearLcd();
 
 
 			while(1)

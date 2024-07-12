@@ -209,32 +209,6 @@ ES_t Login(void)
 
 	u8 Local_u8Value = (u8) Temp_value;
 
-	if(IntermidiateValue != Temp_value)
-	{
-		LCD_enuClearLcd();
-		LCD_enuDisplayString("T=");
-		Local_enuErrorState =LCD_enuDisplayNum(Temp_value);
-
-		if(Local_u8Value>=60)
-		{
-			// EEPROM
-			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,'F');
-			_delay_ms(150);
-			EEPROM_Address++;
-			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,((Local_u8Value/100) +'0' ));
-			_delay_ms(150);
-			EEPROM_Address++;
-			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,(((Local_u8Value/10)%10) +'0'));
-			_delay_ms(150);
-			EEPROM_Address++;
-			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,((Local_u8Value%10) +'0' ));
-			_delay_ms(150);
-			EEPROM_Address++;
-		}
-
-		IntermidiateValue = Temp_value;
-	}
-
 
 	if(Local_u8Value >=60 )
 	{
@@ -250,6 +224,36 @@ ES_t Login(void)
 		LED_Indicators();
 		Local_enuErrorState = Alarm_OFF();
 	}
+
+	if(IntermidiateValue != Temp_value)
+	{
+		//LCD_enuClearLcd();
+		LCD_enuGoToPosition(1,1);
+		LCD_enuDisplayString("T=");
+		Local_enuErrorState =LCD_enuDisplayNum(Temp_value);
+
+		if(Local_u8Value>=60)
+		{
+			// EEPROM
+			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,'F');
+			_delay_ms(10);
+			EEPROM_Address++;
+			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,((Local_u8Value/100) +'0' ));
+			_delay_ms(10);
+			EEPROM_Address++;
+			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,(((Local_u8Value/10)%10) +'0'));
+			_delay_ms(10);
+			EEPROM_Address++;
+			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,((Local_u8Value%10) +'0' ));
+			//_delay_ms(50);
+			EEPROM_Address++;
+		}
+
+		IntermidiateValue = Temp_value;
+	}
+
+
+
 
 
 	return Local_enuErrorState;
@@ -461,7 +465,7 @@ ES_t UART(void)
 
 	static u16 Last_ubdate=0;
 
-	u8 Local_u8Data=0, Local_u8Value =(u8)Temp_value;
+	u8 Local_u8Data=0;
 
 	if(EEPROM_Address > Last_ubdate)
 	{

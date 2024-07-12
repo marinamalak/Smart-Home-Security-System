@@ -93,18 +93,6 @@ ES_t IIC_enuStartCondition(void)
 		Local_enuErrorState = ES_OK;
 	}
 
-	/*TWCR |=(1<<TWCR_TWSTA);
-	//Clear flag
-	TWCR |= (1<<TWCR_TWINT);
-	//wait on flag
-	while(!((TWCR>>TWCR_TWINT)&1));
-
-
-	//check start condition state
-	if((TWSR & 0xF8)==0x08)    //Master transmit
-	{
-		Local_enuErrorState=ES_OK;
-	}*/
 
 	return Local_enuErrorState;
 }
@@ -147,11 +135,7 @@ ES_t IIC_enuStopCondition(void)
 		Local_enuErrorState = ES_OK;
 	}
 
-	/*TWCR |=(1<<TWCR_TWSTO);
-	//Clear flag
-	TWCR |= (1<<TWCR_TWINT);
 
-	Local_enuErrorState=ES_OK;*/
 
 	return Local_enuErrorState;
 }
@@ -195,34 +179,7 @@ ES_t IIC_enuWriteSlaveAddress(u8 Copy_u8SlaveAddress, u8 Copy_u8Operation)
 		Local_enuErrorState = ES_OUT_OF_RANGE;
 	}
 
-	/*if(Copy_u8SlaveAddress>=2 && Copy_u8SlaveAddress<=118 && Copy_u8Operation>=0 && Copy_u8Operation<=1)
-	{
-		//clear start condition
-		TWCR &=~(1<<TWCR_TWSTA);
 
-		TWDR = ((Copy_u8SlaveAddress<<1)|Copy_u8Operation);
-		//Clear flag
-		TWCR |= (1<<TWCR_TWINT);
-		//wait on flag
-		while(!((TWCR>>TWCR_TWINT)&1));
-		//check   state
-		if((TWSR & 0xF8)==0x18 && Copy_u8Operation==0) //SLA+W+ACK //Master transmit
-		{
-			Local_enuErrorState=ES_OK;
-		}
-		else if((TWSR & 0xF8)==0x40 && Copy_u8Operation==1) //SLA+R+ACK //Master recieve
-		{
-			Local_enuErrorState=ES_OK;
-		}
-
-	}
-	else
-	{
-		Local_enuErrorState=ES_OUT_OF_RANGE;
-	}
-
-	//clear start condition
-	TWCR &=~(1<<TWCR_TWSTA);*/
 
 	return Local_enuErrorState;
 }
@@ -292,23 +249,6 @@ ES_t IIC_enuReadData(u8 * Copy_pu8Data)
 		Local_enuErrorState = ES_OK;
 	}
 
-	/*//Clear flag
-	TWCR |= (1<<TWCR_TWINT);
-	//wait on flag
-	while(!((TWCR>>TWCR_TWINT)&1));
-
-
-	//check   state
-	if( (TWSR & 0xF8) == 0x58   ) //Data+ not ACK //Master recieve
-	{
-		*Copy_pu8Data = TWDR;
-		Local_enuErrorState=ES_OK;
-	}
-	else if((TWSR & 0xF8)==0x80 ) //Data+ACK //slave recieve
-	{
-		*Copy_pu8Data = TWDR;
-		Local_enuErrorState=ES_OK;
-	}*/
 
 
 	return Local_enuErrorState;

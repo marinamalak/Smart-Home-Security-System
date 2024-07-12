@@ -46,6 +46,7 @@ int main(void)
 			while(1)
 			{
 				CHECK_temp();
+				CHECK_temp();
 				CHECK_gas();
 				CHECK_windowAttack();
 				CHECK_packageThief();

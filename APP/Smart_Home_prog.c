@@ -24,7 +24,6 @@
 
 #include "../HAL/EEPROM/EEPROM_int.h"
 
-//#include "../MCAL/TIMER/TIMER0/TIMER0_int.h"
 
 #include "../HAL/LM35/LM35_config.h"
 #include "../HAL/LM35/LM35_int.h"
@@ -38,13 +37,11 @@
 extern TR_t LM35_AstrLM35Config[2];
 
 
-u8 Alarm_State=0;
+static volatile u8 Alarm_State=0 , NUM_limit=2;
 u32 Password = PASS;
 f32 Temp_value ,IntermidiateValue = 0;
 static volatile u8 GAS_detect=0 , Window_State=0 ,Package_State=0;
 static volatile u16 EEPROM_Address=0x00;
-
-//static  volatile u8 APP_TIMER0_u8Counter=0;
 
 
 
@@ -57,11 +54,6 @@ ES_t Smart_Home_enuInit(void)
 	Local_enuErrorState = LCD_enuInit();
 	Local_enuErrorState = Uart_enuInit();
 	Local_enuErrorState = EEPROM_enuInit();
-
-	/*
-	TIMER0_enuInit();
-	TIMER0_enuSetPreload(106);
-	GIE_enuDisable();*/
 
 
 	//UART PIN
@@ -106,47 +98,9 @@ ES_t Smart_Home_enuInit(void)
 
 }
 
-//Timer
-/*ES_t APP_enuStart()
-{
-	ES_t Local_enuErrorState=ES_NOK;
 
-	TIMER0_enuCallBackOVF(Read_Sensors,NULL);
-	CHECK_temp();
-	CHECK_gas();
-	CHECK_windowAttack();
-	CHECK_packageThief();
-	Local_enuErrorState=ES_OK;
 
-	return Local_enuErrorState;
-}*/
 
-//Timer
-/*static void Read_Sensors()
-{
-	APP_TIMER0_u8Counter++;
-
-	if(APP_TIMER0_u8Counter==152)
-	{
-		//Read LM35
-		ADC_enuStartConversion();
-		LM35_enuGetTemp(& Temp_value);
-
-		//Read Gas
-		DIO_enuGetPinValue(DIO_u8PORTD,DIO_u8PIN3,&GAS_detect);
-
-		// Read Tilt and Vibration sensor
-		DIO_enuGetPinValue(DIO_u8PORTA,DIO_u8PIN0,&Window_State);
-
-		// Read PIR & vibration sensor
-		DIO_enuGetPinValue(DIO_u8PORTA,DIO_u8PIN4,&Package_State);
-
-		TIMER0_enuSetPreload(106);
-		APP_TIMER0_u8Counter=0;
-
-	}
-
-}*/
 
 ES_t Login(void)
 {
@@ -238,9 +192,13 @@ ES_t Login(void)
 			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,'F');
 			_delay_ms(10);
 			EEPROM_Address++;
-			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,((Local_u8Value/100) +'0' ));
-			_delay_ms(10);
-			EEPROM_Address++;
+			if(!((Local_u8Value/100)==0))
+			{
+				NUM_limit=3;
+				Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,((Local_u8Value/100) +'0' ));
+				_delay_ms(10);
+				EEPROM_Address++;
+			}
 			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,(((Local_u8Value/10)%10) +'0'));
 			_delay_ms(10);
 			EEPROM_Address++;
@@ -398,16 +356,8 @@ static ES_t LED_Indicators(void)
 	case FIRE:
 		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN3,DIO_u8HIGH);
 		break;
-	/*case GAS:
-	//	Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN5,DIO_u8HIGH);
-		break;
-	case ATTACK:
-		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTD,DIO_u8PIN4,DIO_u8HIGH);
-		break;*/
 	case NORMAL:
 		Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN3,DIO_u8LOW);
-		//Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN5,DIO_u8LOW);
-		//Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTD,DIO_u8PIN4,DIO_u8LOW);
 		break;
 	}
 
@@ -469,7 +419,7 @@ ES_t UART(void)
 
 	if(EEPROM_Address > Last_ubdate)
 	{
-		Uart_enuSendString("EEPROM Ubdates CONTENT \r\n");
+		Uart_enuSendString("EEPROM Updates CONTENT \r\n");
 
 		for( u16 i=0;i<EEPROM_Address;i++)
 		{
@@ -482,7 +432,7 @@ ES_t UART(void)
 				break;
 			case 'F':
 				Uart_enuSendString(" ->> Fire >> T=");
-				for(int j=0;j<3;j++)
+				for(int j=0;j<NUM_limit;j++)
 				{
 					i++;
 					EEPROM_enuReadData(i,&Local_u8Data);
@@ -511,25 +461,7 @@ ES_t UART(void)
 
 }
 
-ES_t Compare(u8* str1 ,u8* str2)
-{
-	ES_t Local_enuErrorState =ES_NOK;
-	u8 i=0;
-	for(;str1[i]!='\0' && str2[i]!='\0';i++)
-	{
-		if(str1[i] != str2[i])
-		{
-			break;
-		}
-	}
-	if(str1[i]==0 && str2[i]==0)
-	{
-		Local_enuErrorState=ES_OK;
-		return Local_enuErrorState ;
-	}
-	//Local_enuErrorState=ES_OK; >> this line who give error
-	return Local_enuErrorState ;
-}
+
 
 
 

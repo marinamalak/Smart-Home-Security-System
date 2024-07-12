@@ -22,3 +22,7 @@ In today's world, ensuring the safety of your home has never been more critical.
 - **EEPROM Logging:** Log all events in EEPROM memory for later review.
 - **USART Communication:** Use USART protocol with a virtual terminal to display EEPROM contents.
 
+## Project demo
+
+https://github.com/user-attachments/assets/5d909e3e-a4c7-4fd7-84c4-1da00d52c9ee
+

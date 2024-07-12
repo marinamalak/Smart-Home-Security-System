@@ -47,7 +47,7 @@ u32 Password = PASS;
 f32 Temp_value ,IntermidiateValue = 0;
 static volatile u8 GAS_detect=0 , Window_State=0 ,Package_State=0;
 
-static volatile u16 EEPROM_Address=0x01;
+static volatile u16 EEPROM_Address=0x00;
 static  volatile u8 APP_TIMER0_u8Counter=0;
 
 
@@ -215,7 +215,7 @@ ES_t Login(void)
 
 		// EEPROM
 		Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,'L');
-		_delay_ms(150);
+		//_delay_ms(150);
 		EEPROM_Address++;
 
 		value =0;
@@ -263,7 +263,7 @@ ES_t Login(void)
 		{
 			// EEPROM
 			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,'F');
-			_delay_ms(150);
+			//_delay_ms(150);
 			EEPROM_Address++;
 			//Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,'o');
 			//EEPROM_Address++;
@@ -312,7 +312,7 @@ ES_t CHECK_gas(void)
 		if(Last_state != GAS_detect)
 		{
 			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,'G');
-			_delay_ms(150);
+			//_delay_ms(150);
 			EEPROM_Address++;
 			Last_state = GAS_detect;
 		}
@@ -351,7 +351,7 @@ ES_t CHECK_windowAttack(void)
 		if(Last_state != Window_State)
 		{
 			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,'W');
-			_delay_ms(150);
+			//_delay_ms(150);
 			EEPROM_Address++;
 			Last_state = Window_State;
 		}
@@ -390,7 +390,7 @@ ES_t CHECK_packageThief(void)
 		if(Last_state != Package_State)
 		{
 			Local_enuErrorState =EEPROM_enuWriteData(EEPROM_Address,'P');
-			_delay_ms(150);
+			//_delay_ms(150);
 			EEPROM_Address++;
 			Last_state = Package_State;
 		}
@@ -511,7 +511,7 @@ ES_t UART(void)
 	{
 		Uart_enuSendString("EEPROM Ubdates CONTENT \r\n");
 
-		for( u16 i=Last_ubdate;i<EEPROM_Address;i++)
+		for( u16 i=0;i<EEPROM_Address;i++)
 		{
 			//if(i%2==0 && i!=0)
 			//{

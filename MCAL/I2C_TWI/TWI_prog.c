@@ -80,7 +80,20 @@ ES_t IIC_enuStartCondition(void)
 {
 	ES_t Local_enuErrorState=ES_NOK;
 
-	TWCR |=(1<<TWCR_TWSTA);
+	// Transmit start condition
+	TWCR = (1 << TWCR_TWSTA) | (1 << TWCR_TWEN) | (1 << TWCR_TWINT);
+
+	// Wait for start condition to be executed
+	while (!(TWCR & (1 << TWCR_TWINT)));
+
+	// Check the status of the TWI operation
+	if ((TWSR & 0xF8) == 0x08)
+	{
+		// Start condition transmitted successfully
+		Local_enuErrorState = ES_OK;
+	}
+
+	/*TWCR |=(1<<TWCR_TWSTA);
 	//Clear flag
 	TWCR |= (1<<TWCR_TWINT);
 	//wait on flag
@@ -91,7 +104,7 @@ ES_t IIC_enuStartCondition(void)
 	if((TWSR & 0xF8)==0x08)    //Master transmit
 	{
 		Local_enuErrorState=ES_OK;
-	}
+	}*/
 
 	return Local_enuErrorState;
 }
@@ -119,11 +132,26 @@ ES_t IIC_enuStopCondition(void)
 {
 	ES_t Local_enuErrorState=ES_NOK;
 
-	TWCR |=(1<<TWCR_TWSTO);
+	// Transmit stop condition
+	TWCR = (1 << TWCR_TWSTO) | (1 << TWCR_TWEN) | (1 << TWCR_TWINT);
+
+	// Wait for stop condition to be executed
+	while (TWCR & (1 << TWCR_TWSTO));
+	// TWSR == 0x50 --> Data byte transmitted and ACK received
+	// TWSR == 0x58 --> Data byte transmitted and NACK received
+
+	// Check the status of the TWI operation
+	if ((TWSR & 0xF8) == 0x58 || (TWSR & 0xF8) == 0x50 || (TWSR & 0xF8) == 0x38)
+	{
+		// Stop condition transmitted successfully
+		Local_enuErrorState = ES_OK;
+	}
+
+	/*TWCR |=(1<<TWCR_TWSTO);
 	//Clear flag
 	TWCR |= (1<<TWCR_TWINT);
 
-	Local_enuErrorState=ES_OK;
+	Local_enuErrorState=ES_OK;*/
 
 	return Local_enuErrorState;
 }
@@ -132,10 +160,45 @@ ES_t IIC_enuWriteSlaveAddress(u8 Copy_u8SlaveAddress, u8 Copy_u8Operation)
 {
 	ES_t Local_enuErrorState=ES_NOK;
 
-	if(Copy_u8SlaveAddress>=2 && Copy_u8SlaveAddress<=118 && Copy_u8Operation>=0 && Copy_u8Operation<=1)
+	// Check if the address and operation are within valid ranges
+	if (Copy_u8SlaveAddress >= 2 && Copy_u8SlaveAddress <= 118 && (Copy_u8Operation == 0 || Copy_u8Operation == 1))
 	{
-		/*//clear start condition
-		TWCR &=~(1<<TWCR_TWSTA);*/
+		// Load the slave address and operation (read or write) into the TWI Data Register
+		TWDR = (Copy_u8SlaveAddress << 1) | Copy_u8Operation;
+
+		// Clear the TWINT flag to start the transmission of the address
+		TWCR = (1 << TWCR_TWEN) | (1 << TWCR_TWINT);
+
+		// Wait until the TWINT flag is set, indicating that the transmission is complete
+		while (!(TWCR & (1 << TWCR_TWINT)));
+
+		// Check the status of the TWI operation
+		if ((TWSR & 0xF8) == 0x18 && Copy_u8Operation == 0)
+		{
+			// Master transmit mode and received ACK from slave
+			Local_enuErrorState = ES_OK;
+		}
+		else if ((TWSR & 0xF8) == 0x40 && Copy_u8Operation == 1)
+		{
+			// Master receive mode and received ACK from slave
+			Local_enuErrorState = ES_OK;
+		}
+		else
+		{
+			// Address not acknowledged by slave
+			Local_enuErrorState = ES_NOK;
+		}
+	}
+	else
+	{
+		// Address or operation out of range
+		Local_enuErrorState = ES_OUT_OF_RANGE;
+	}
+
+	/*if(Copy_u8SlaveAddress>=2 && Copy_u8SlaveAddress<=118 && Copy_u8Operation>=0 && Copy_u8Operation<=1)
+	{
+		//clear start condition
+		TWCR &=~(1<<TWCR_TWSTA);
 
 		TWDR = ((Copy_u8SlaveAddress<<1)|Copy_u8Operation);
 		//Clear flag
@@ -159,7 +222,7 @@ ES_t IIC_enuWriteSlaveAddress(u8 Copy_u8SlaveAddress, u8 Copy_u8Operation)
 	}
 
 	//clear start condition
-	TWCR &=~(1<<TWCR_TWSTA);
+	TWCR &=~(1<<TWCR_TWSTA);*/
 
 	return Local_enuErrorState;
 }
@@ -214,6 +277,22 @@ ES_t IIC_enuReadData(u8 * Copy_pu8Data)
 	ES_t Local_enuErrorState=ES_NOK;
 
 	//Clear flag
+	TWCR |= (1 << TWCR_TWINT);
+	//wait on flag
+	while (!((TWCR >> TWCR_TWINT) & 1));
+	//check   state
+	if ((TWSR & 0xF8) == 0x50) //Data+ACK //Master receive
+	{
+		*Copy_pu8Data = TWDR;
+		Local_enuErrorState = ES_OK;
+	}
+	else if ((TWSR & 0xF8) == 0x58) //Data+NACK //Master receive
+	{
+		*Copy_pu8Data = TWDR;
+		Local_enuErrorState = ES_OK;
+	}
+
+	/*//Clear flag
 	TWCR |= (1<<TWCR_TWINT);
 	//wait on flag
 	while(!((TWCR>>TWCR_TWINT)&1));
@@ -229,7 +308,7 @@ ES_t IIC_enuReadData(u8 * Copy_pu8Data)
 	{
 		*Copy_pu8Data = TWDR;
 		Local_enuErrorState=ES_OK;
-	}
+	}*/
 
 
 	return Local_enuErrorState;

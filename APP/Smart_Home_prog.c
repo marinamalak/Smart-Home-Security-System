@@ -321,6 +321,7 @@ ES_t CHECK_gas(void)
 	}
 	else
 	{
+		Last_state=0;
 		LCD_enuGoToPosition(1,8);
 		LCD_enuDisplayString("NORMAL ");
 		if( !(Alarm_State ==ATTACK  || Alarm_State ==THIEF || Alarm_State ==FIRE ))
@@ -363,6 +364,7 @@ ES_t CHECK_windowAttack(void)
 	}
 	else
 	{
+		Last_state=0;
 		LCD_enuGoToPosition(2,1);
 		LCD_enuDisplayString("NORMAL");
 		if( !(Alarm_State ==THIEF  || Alarm_State ==GAS || Alarm_State ==FIRE ))
@@ -405,6 +407,7 @@ ES_t CHECK_packageThief(void)
 	}
 	else
 	{
+		Last_state=0;
 		LCD_enuGoToPosition(2,8);
 		LCD_enuDisplayString("NORMAL");
 		if( !(Alarm_State ==ATTACK  || Alarm_State ==GAS || Alarm_State ==FIRE ))

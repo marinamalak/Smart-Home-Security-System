@@ -16,4 +16,12 @@
 #define ATTACK        3
 #define THIEF         4
 
+
+static ES_t OPEN_Door(void);
+static ES_t LED_Indicators(void);
+static ES_t Alarm_ON(void);
+static ES_t Alarm_OFF(void);
+static void Read_Sensors(void);
+static ES_t Compare(u8* str1 ,u8* str2);
+
 #endif /* APP_SMART_HOME_PRIV_H_ */

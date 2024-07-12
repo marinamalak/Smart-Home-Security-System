@@ -33,7 +33,7 @@
 
 #include "Smart_Home_priv.h"
 #include "Smart_Home_config.h"
-#include "Smart_Home_int.h"
+//#include "Smart_Home_int.h"
 
 
 //extern EINT_t EINT_tstrEINTcofig[3];
@@ -51,13 +51,8 @@ static volatile u16 EEPROM_Address=0x00;
 static  volatile u8 APP_TIMER0_u8Counter=0;
 
 
-static ES_t OPEN_Door(void);
 //static void Read_Temp(void*p);
-static ES_t LED_Indicators(void);
-static ES_t Alarm_ON(void);
-static ES_t Alarm_OFF(void);
-static ES_t Compare(u8* str1 ,u8* str2);
-static void Read_Sensors(void);
+
 
 ES_t Smart_Home_enuInit(void)
 {
@@ -69,9 +64,10 @@ ES_t Smart_Home_enuInit(void)
 	Local_enuErrorState = Uart_enuInit();
 	Local_enuErrorState = EEPROM_enuInit();
 
+	/*
 	TIMER0_enuInit();
 	TIMER0_enuSetPreload(106);
-	GIE_enuDisable();
+	GIE_enuDisable();*/
 
 
 	//UART PIN
@@ -92,7 +88,7 @@ ES_t Smart_Home_enuInit(void)
 	//Local_enuErrorState = ADC_enuEnableInterruptMode();
 	//Local_enuErrorState = ADC_enuCallBack(Read_Temp ,&Temp_value);
 	Local_enuErrorState = ADC_enuStartConversion();
-	LM35_enuGetTemp(& Temp_value);
+	Local_enuErrorState=LM35_enuGetTemp(& Temp_value);
 
 	//Door >> output
 	 Local_enuErrorState = DIO_enuSetPinDirection(DIO_u8PORTA,DIO_u8PIN1,DIO_u8OUTPUT);
@@ -131,10 +127,10 @@ ES_t Smart_Home_enuInit(void)
 	 DIO_enuSetPinDirection(DIO_u8PORTA,DIO_u8PIN5,DIO_u8OUTPUT);
 
 
-	 TIMER0_enuEnableOVFINTERRUPT();
+	 //TIMER0_enuEnableOVFINTERRUPT();
 
 
-	Local_enuErrorState = GIE_enuEnable();
+	//Local_enuErrorState = GIE_enuEnable();
 
 	return Local_enuErrorState;
 
@@ -210,6 +206,8 @@ ES_t Login(void)
 	}
 	if (value == Password)
 	{
+		LCD_enuClearLcd();
+		LCD_enuDisplayString("OPEN DOOR");
 		//open door
 		Local_enuErrorState=OPEN_Door();
 
@@ -281,7 +279,7 @@ ES_t Login(void)
 		Local_enuErrorState = Alarm_ON();
 
 	}
-	else
+	else if( !(Alarm_State ==ATTACK  || Alarm_State ==GAS || Alarm_State ==THIEF ))
 	{
 		Alarm_State = NORMAL;
 		LED_Indicators();
@@ -325,9 +323,12 @@ ES_t CHECK_gas(void)
 	{
 		LCD_enuGoToPosition(1,8);
 		LCD_enuDisplayString("NORMAL ");
-		Alarm_State = NORMAL;
-		LED_Indicators();
-		Local_enuErrorState = Alarm_OFF();
+		if( !(Alarm_State ==ATTACK  || Alarm_State ==THIEF || Alarm_State ==FIRE ))
+		{
+			Alarm_State = NORMAL;
+			LED_Indicators();
+			Local_enuErrorState = Alarm_OFF();
+		}
 	}
 
 	return Local_enuErrorState;
@@ -364,9 +365,12 @@ ES_t CHECK_windowAttack(void)
 	{
 		LCD_enuGoToPosition(2,1);
 		LCD_enuDisplayString("NORMAL");
-		Alarm_State = NORMAL;
-		LED_Indicators();
-		Local_enuErrorState = Alarm_OFF();
+		if( !(Alarm_State ==THIEF  || Alarm_State ==GAS || Alarm_State ==FIRE ))
+		{
+			Alarm_State = NORMAL;
+			LED_Indicators();
+			Local_enuErrorState = Alarm_OFF();
+		}
 	}
 
 	return Local_enuErrorState;
@@ -396,14 +400,19 @@ ES_t CHECK_packageThief(void)
 		}
 
 		Alarm_State = THIEF;
+		LED_Indicators();
 		Local_enuErrorState = Alarm_ON();
 	}
 	else
 	{
 		LCD_enuGoToPosition(2,8);
 		LCD_enuDisplayString("NORMAL");
-		Alarm_State = NORMAL;
-		Local_enuErrorState = Alarm_OFF();
+		if( !(Alarm_State ==ATTACK  || Alarm_State ==GAS || Alarm_State ==FIRE ))
+		{
+			Alarm_State = NORMAL;
+			LED_Indicators();
+			Local_enuErrorState = Alarm_OFF();
+		}
 	}
 
 	return Local_enuErrorState;
@@ -450,7 +459,7 @@ static ES_t OPEN_Door(void)
 	ES_t Local_enuErrorState =ES_NOK;
 
 	Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN1,DIO_u8HIGH);
-	_delay_ms(3000);
+	_delay_ms(1000);
 	Local_enuErrorState=DIO_enuSetPinValue(DIO_u8PORTA,DIO_u8PIN1,DIO_u8LOW);
 
 	return Local_enuErrorState;
@@ -513,12 +522,9 @@ ES_t UART(void)
 
 		for( u16 i=0;i<EEPROM_Address;i++)
 		{
-			//if(i%2==0 && i!=0)
-			//{
-			//}
 			EEPROM_enuReadData(i,&Local_u8Data);
 			Uart_enuSendChar(Local_u8Data);
-				Uart_enuSendString("\r\n");
+			Uart_enuSendString("\r\n");
 		}
 		Last_ubdate=EEPROM_Address;
 
